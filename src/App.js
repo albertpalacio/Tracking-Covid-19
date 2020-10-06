@@ -1,13 +1,27 @@
 import React, { useState, useEffect} from 'react';
 import './App.css';
-import { MenuItem, FormControl, Select, Menu} from "@material-ui/core";
+import { MenuItem, FormControl, Select, Menu, Card, CardContent} from "@material-ui/core";
 import InfoBox from './InfoBox'
+import Map from './Map'
+
 
 
 
 function App() {
   const [countries, setCountries] = useState([]);
-  const [country, setCountry] = useState('worldwide')
+  const [country, setCountry] = useState('worldwide');
+  const [countryInfo, setCountryInfo] = useState({});
+
+
+  useEffect(() => {
+    fetch("https://disease.sh/v3/covid-19/all")
+    .then(response => response.json())
+    .then(data => {
+      setCountryInfo(data)
+    })
+  }, []);
+
+
   
 useEffect(() => {
   const getCountriesData = async () => {
@@ -32,12 +46,29 @@ useEffect(() => {
     const countryCode = event.target.value;
 
     setCountry(countryCode);
-  }
+
+    const url = countryCode === 'worldwide' 
+    ? `https://disease.sh/v3/covid-19/all` 
+    : `https://disease.sh/v3/covid-19/countries/${countryCode}`
+
+    await fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      setCountry(countryCode)
+
+    // All of the Data from the coutnry response
+      setCountryInfo(data);
+    })
+    
+  };
+
+  console.log("country info ayo", countryInfo)
+
 
 
   return (
     <div className="app">
-     
+       <div className="app_left">
      <div className="app_header">
 
      <h1>Tracking Covid 19</h1>
@@ -58,11 +89,11 @@ useEffect(() => {
 
     
     <div className="app_stats">
-      <InfoBox title="Coronavirus Cases" cases={123} total={2000} />
+      <InfoBox title="Coronavirus Cases" cases={countryInfo.todayCases} total={countryInfo.cases} />
 
-      <InfoBox title="Recovered" cases={123} total={3000} />
+      <InfoBox title="Recovered" cases={countryInfo.todayRecovered} total={countryInfo.recovered} />
 
-      <InfoBox title="Deaths" cases={123} total={4000} />
+      <InfoBox title="Deaths" cases={countryInfo.todayDeaths} total={countryInfo.deaths} />
 
 
        
@@ -78,11 +109,23 @@ useEffect(() => {
     {/* infoboxes*/}
     {/* infoboxes*/}
 
-     {/* Table*/}
-      {/* Graph*/}
-
 
       {/* Map */}
+<Map />
+
+        </div>
+
+      <Card className="app_right">
+
+        <CardContent>
+            <h3> Live cases by country</h3>
+
+
+            <h3> Worldwide new cases</h3>
+        </CardContent>
+     {/* Table*/}
+      {/* Graph*/}
+      </Card>
 
     </div>
   );
